@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TripSync — Travel Together. Split Smarter.</title>
+  <meta name="description" content="TripSync helps groups plan trips, split shared expenses, manage itineraries, coordinate plans, and settle up without confusion.">
+  
+  <meta property="og:title" content="TripSync — Travel Together. Split Smarter.">
+  <meta property="og:description" content="Smart group travel planning and expense management for friends who want to stay organized and settle up instantly.">
+  <meta property="og:type" content="website">
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --bg: 10 12 20;
+      --bg-soft: 16 19 31;
+      --panel: 18 22 35;
+      --panel-2: 24 30 46;
+      --text: 238 242 255;
+      --muted: 162 172 198;
+      --line: 53 61 86;
+      --brand: 124 92 255;
+      --brand-2: 43 205 255;
+      --success: 53 214 141;
+      --warning: 251 191 36;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, -apple-system, sans-serif;
+      color: rgb(var(--text));
+      background:
+        radial-gradient(circle at top left, rgba(124, 92, 255, 0.22), transparent 34%),
+        radial-gradient(circle at top right, rgba(43, 205, 255, 0.16), transparent 26%),
+        linear-gradient(180deg, rgb(var(--bg)) 0%, #0a0d14 100%);
+      overflow-x: hidden;
+    }
+    .container { width: 100%; max-width: 1280px; margin: 0 auto; padding: 0 1rem; }
+    .glass {
+      background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.04));
+      border: 1px solid rgba(255,255,255,0.10);
+      backdrop-filter: blur(18px);
+      box-shadow: 0 20px 80px rgba(0,0,0,0.35);
+    }
+    .glass-soft {
+      background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03));
+      border: 1px solid rgba(255,255,255,0.09);
+      backdrop-filter: blur(16px);
+    }
+    .hero-bg {
+      background:
+        radial-gradient(circle at 20% 20%, rgba(124,92,255,0.35), transparent 22%),
+        radial-gradient(circle at 80% 10%, rgba(43,205,255,0.22), transparent 18%),
+        radial-gradient(circle at 60% 80%, rgba(53,214,141,0.16), transparent 22%),
+        linear-gradient(180deg, rgba(5,8,15,0.25), rgba(5,8,15,0.72));
+    }
+    .gradient-text {
+      background: linear-gradient(90deg, #fff, #c9c4ff 42%, #7ce7ff 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+      padding: 0.95rem 1.35rem; border-radius: 999px; font-weight: 700; text-decoration: none;
+      transition: transform .2s ease, box-shadow .2s ease, background .2s ease, border .2s ease;
+      border: 1px solid transparent;
+    }
+    .btn:hover { transform: translateY(-1px); }
+    .btn-primary {
+      background: linear-gradient(135deg, rgb(var(--brand)) 0%, rgb(var(--brand-2)) 100%);
+      color: white; box-shadow: 0 18px 40px rgba(124,92,255,0.28);
+    }
+    .btn-secondary {
+      background: rgba(255,255,255,0.05); color: rgb(var(--text)); border-color: rgba(255,255,255,0.10);
+    }
+    .btn-secondary:hover { background: rgba(255,255,255,0.08); }
+    .chip {
+      display: inline-flex; align-items: center; gap: .5rem; padding: .4rem .75rem; border-radius: 999px;
+      background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.10); color: rgb(var(--muted));
+      font-size: .875rem;
+    }
+    .card {
+      background: linear-gradient(180deg, rgba(24,30,46,0.9), rgba(14,17,28,0.9));
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 1.25rem;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.28);
+    }
+    .section-title { letter-spacing: -0.04em; }
+    .animate-float { animation: float 7s ease-in-out infinite; }
+    .animate-float-delay { animation: float 8.5s ease-in-out infinite; animation-delay: -2s; }
+    .animate-pulse-slow { animation: pulseSlow 5s ease-in-out infinite; }
+    .fade-up { animation: fadeUp .8s ease both; }
+    @keyframes float { 0%,100% { transform: translateY(0px) } 50% { transform: translateY(-10px) } }
+    @keyframes pulseSlow { 0%,100% { opacity: .85 } 50% { opacity: 1 } }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(14px) } to { opacity: 1; transform: translateY(0) } }
+    .stat { position: relative; overflow: hidden; }
+    .stat::after {
+      content: ""; position: absolute; inset: auto -10% -30% auto; width: 140px; height: 140px;
+      background: radial-gradient(circle, rgba(124,92,255,0.24), transparent 68%);
+    }
+    .grid-overlay {
+      background-image: linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+      background-size: 40px 40px;
+      mask-image: linear-gradient(to bottom, rgba(0,0,0,0.7), transparent);
+    }
+  </style>
+</head>
+<body>
+  <header class="sticky top-0 z-50 border-b border-white/8 bg-slate-950/75 backdrop-blur-xl">
+    <div class="container flex h-16 items-center justify-between">
+      <a href="#" class="flex items-center gap-2 text-white font-bold tracking-tight">
+        <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 to-cyan-400 shadow-lg shadow-violet-500/20">
+          <i data-lucide="route" class="w-5 h-5"></i>
+        </div>
+        <span class="text-lg">TripSync</span>
+      </a>
+      <nav class="hidden md:flex items-center gap-7 text-sm text-slate-300">
+        <a href="#problem" class="hover:text-white transition-colors">Problem</a>
+        <a href="#features" class="hover:text-white transition-colors">Features</a>
+        <a href="#previews" class="hover:text-white transition-colors">Product</a>
+        <a href="#testimonials" class="hover:text-white transition-colors">Testimonials</a>
+        <a href="#cta" class="hover:text-white transition-colors">Get Started</a>
+      </nav>
+      <a href="#cta" class="btn btn-secondary text-sm px-4 py-2">Get Started Free</a>
+    </div>
+  </header>
+
+  <main>
+    <section class="relative overflow-hidden">
+      <div class="absolute inset-0">
+        <img src="https://cdn.landing-page.io/ai-landingpage/html-generate/33b93fb2-0c7a-4048-a84d-9a228639f0ca/images/auto-img-1-b82b9a9901e64b9c9481ac747f436891.png" alt="Travel background" class="h-full w-full object-cover opacity-35" data-ai="generate" data-slot="auto-img-1" data-prompt="Travel background, high quality commercial web image, clean composition, no watermark, no text overlay" data-ar="16:9" width="1600" height="900">
+        <div class="absolute inset-0 hero-bg"></div>
+        <div class="absolute inset-0 grid-overlay opacity-50"></div>
+      </div>
+
+      <div class="container relative z-10 py-20 md:py-28">
+        <div class="grid lg:grid-cols-2 gap-12 items-center">
+          <div class="fade-up">
+            <div class="chip mb-6 w-fit">
+              <span class="h-2 w-2 rounded-full bg-emerald-400"></span>
+              Trusted by modern travel groups
+            </div>
+
+            <h1 class="section-title text-5xl md:text-6xl lg:text-7xl font-black leading-[0.95] tracking-tight max-w-3xl">
+              <span class="gradient-text">Travel Together.</span><br>
+              Split Smarter.
+            </h1>
+
+            <p class="mt-6 max-w-xl text-lg md:text-xl text-slate-300 leading-relaxed">
+              TripSync is the smart way for friends to plan trips, track shared expenses, manage itineraries,
+              coordinate activities, and settle payments without confusion.
+            </p>
+
+            <div class="mt-8 flex flex-col sm:flex-row gap-4">
+              <a href="#cta" class="btn btn-primary">
+                Get Started Free
+                <i data-lucide="arrow-right" class="w-4 h-4"></i>
+              </a>
+            </div>
+
+            <div class="mt-10 grid grid-cols-3 gap-3 max-w-xl">
+              <div class="glass-soft rounded-2xl p-4 stat">
+                <div class="text-2xl font-black" data-count="120">0</div>
+                <div class="text-xs text-slate-400 mt-1">Trips organized</div>
+              </div>
+              <div class="glass-soft rounded-2xl p-4 stat">
+                <div class="text-2xl font-black" data-count="4300">0</div>
+                <div class="text-xs text-slate-400 mt-1">Expenses settled</div>
+              </div>
+              <div class="glass-soft rounded-2xl p-4 stat">
+                <div class="text-2xl font-black" data-count="98">0</div>
+                <div class="text-xs text-slate-400 mt-1">Less chaos</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="relative">
+            <div class="absolute-top-6-left-4 glass-soft rounded-2xl p-4 w-56 animate-float hidden md:block">
+              <div class="flex items-center gap-3">
+                <div class="h-10 w-10 rounded-xl bg-emerald-400/15 flex items-center justify-center text-emerald-300">
+                  <i data-lucide="check-check"></i>
+                </div>
+                <div>
+                  <p class="text-sm font-semibold">Auto-splitting</p>
+                  <p class="text-xs text-slate-400">Calculates balances instantly</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="card p-5 md:p-6 relative overflow-hidden">
+              <div class="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/60 to-transparent"></div>
+              <div class="flex items-center justify-between mb-5">
+                <div>
+                  <p class="text-sm text-slate-400">Live expense split</p>
+                  <h2 class="text-2xl font-bold tracking-tight">Weekend in Lisbon</h2>
+                </div>
+                <div class="chip bg-emerald-400/10 text-emerald-300 border-emerald-300/15">
+                  <span class="h-2 w-2 rounded-full bg-emerald-400 animate-pulse-slow"></span>
+                  Updated now
+                </div>
+              </div>
+
+              <div class="glass rounded-2xl p-5 mb-4">
+                <div class="flex items-center justify-between gap-4">
+                  <div class="flex items-center gap-3">
+                    <div class="h-12 w-12 rounded-2xl bg-gradient-to-br from-orange-400 to-pink-500 flex items-center justify-center font-bold text-white">M</div>
+                    <div>
+                      <p class="font-semibold">Maya paid for dinner</p>
+                      <p class="text-sm text-slate-400">Restaurant, groceries, and taxis</p>
+                    </div>
+                  </div>
+                  <div class="text-right">
+                    <p class="text-2xl font-black">$186</p>
+                    <p class="text-xs text-slate-400">split among 4</p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="grid md:grid-cols-[1.2fr_0.8fr] gap-4">
+                <div class="glass-soft rounded-2xl p-4">
+                  <p class="text-sm font-semibold mb-3 text-slate-200">Who owes whom</p>
+                  <div class="space-y-3">
+                    <div class="flex items-center justify-between">
+                      <div class="flex items-center gap-3">
+                        <div class="h-8 w-8 rounded-full bg-violet-500/20 text-violet-200 flex items-center justify-center text-xs font-bold">A</div>
+                        <span class="text-sm">Ava owes Maya</span>
+                      </div>
+                      <span class="text-sm text-amber-300">$46.50</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                      <div class="flex items-center gap-3">
+                        <div class="h-8 w-8 rounded-full bg-cyan-500/20 text-cyan-200 flex items-center justify-center text-xs font-bold">J</div>
+                        <span class="text-sm">Jules owes Maya</span>
+                      </div>
+                      <span class="text-sm text-amber-300">$46.50</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                      <div class="flex items-center gap-3">
+                        <div class="h-8 w-8 rounded-full bg-emerald-500/20 text-emerald-200 flex items-center justify-center text-xs font-bold">N</div>
+                        <span class="text-sm">Noah owes Maya</span>
+                      </div>
+                      <span class="text-sm text-amber-300">$46.50</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="space-y-4">
+                  <div class="glass-soft rounded-2xl p-4">
+                    <p class="text-xs uppercase tracking-[0.18em] text-slate-400 mb-1">Settlement</p>
+                    <p class="text-lg font-bold">$139.50</p>
+                    <p class="text-sm text-slate-400">Collected with 1 tap</p>
+                  </div>
+                  <div class="glass-soft rounded-2xl p-4">
+                    <p class="text-xs uppercase tracking-[0.18em] text-slate-400 mb-1">Trip budget</p>
+                    <p class="text-lg font-bold">74% used</p>
+                    <div class="mt-3 h-2 rounded-full bg-white/10 overflow-hidden">
+                      <div class="h-full w-[74%] rounded-full bg-gradient-to-r from-violet-500 to-cyan-400"></div>
+                    </div>
+                    <p class="text-sm text-slate-400 mt-2">Still within plan</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="absolute-bottom-5-right-4 glass-soft rounded-2xl p-4 w-52 animate-float-delay hidden md:block">
+              <p class="text-xs text-slate-400">Next activity</p>
+              <div class="mt-2 flex items-center gap-3">
+                <div class="h-10 w-10 rounded-xl bg-cyan-400/15 flex items-center justify-center text-cyan-300">
+                  <i data-lucide="map-pinned"></i>
+                </div>
+                <div>
+                  <p class="text-sm font-semibold">Sunset ferry</p>
+                  <p class="text-xs text-slate-400">7:30 PM • 12 travelers</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="problem" class="py-20 md:py-24">
+      <div class="container">
+        <div class="max-w-3xl">
+          <p class="chip mb-4 w-fit">Problem → Solution</p>
+          <h2 class="section-title text-3xl md:text-5xl font-black tracking-tight">Group trips get messy fast.</h2>
+          <p class="mt-4 text-slate-300 text-lg leading-relaxed">
+            Different payment methods, shared reservations, group chats full of decisions, and nobody sure who owes what.
+            TripSync turns that chaos into one shared source of truth.
+          </p>
+        </div>
+
+        <div class="mt-10 grid lg:grid-cols-3 gap-5">
+          <div class="card p-6">
+            <div class="h-12 w-12 rounded-2xl bg-red-500/10 text-red-300 flex items-center justify-center mb-4">
+              <i data-lucide="receipt"></i>
+            </div>
+            <h3 class="text-xl font-bold mb-2">Expense confusion</h3>
+            <p class="text-slate-400">People pay at different times, receipts get lost, and reimbursements drag on.</p>
+          </div>
+          <div class="card p-6">
+            <div class="h-12 w-12 rounded-2xl bg-amber-500/10 text-amber-300 flex items-center justify-center mb-4">
+              <i data-lucide="calendar-range"></i>
+            </div>
+            <h3 class="text-xl font-bold mb-2">Trip plans everywhere</h3>
+            <p class="text-slate-400">Itineraries live in spreadsheets, notes apps, and random chat messages.</p>
+          </div>
+          <div class="card p-6">
+            <div class="h-12 w-12 rounded-2xl bg-cyan-500/10 text-cyan-300 flex items-center justify-center mb-4">
+              <i data-lucide="calculator"></i>
+            </div>
+            <h3 class="text-xl font-bold mb-2">Settlements take forever</h3>
+            <p class="text-slate-400">Everyone wants a fair split, but no one wants to manually do the math.</p>
+          </div>
+        </div>
+
+        <div class="mt-6 card p-6 md:p-8">
+          <div class="grid md:grid-cols-3 gap-6 items-center">
+            <div>
+              <p class="text-sm text-slate-400 mb-2">TripSync solution</p>
+              <h3 class="text-2xl font-bold">One collaborative workspace for everything.</h3>
+            </div>
+            <div class="md:col-span-2 grid sm:grid-cols-3 gap-4">
+              <div class="glass-soft rounded-2xl p-4">
+                <i data-lucide="users" class="w-5 h-5 text-violet-300 mb-2"></i>
+                <p class="font-semibold">Shared planning</p>
+                <p class="text-sm text-slate-400">Invite the whole group</p>
+              </div>
+              <div class="glass-soft rounded-2xl p-4">
+                <i data-lucide="split" class="w-5 h-5 text-cyan-300 mb-2"></i>
+                <p class="font-semibold">Automatic splits</p>
+                <p class="text-sm text-slate-400">Equal or custom shares</p>
+              </div>
+              <div class="glass-soft rounded-2xl p-4">
+                <i data-lucide="badge-check" class="w-5 h-5 text-emerald-300 mb-2"></i>
+                <p class="font-semibold">Clear settlements</p>
+                <p class="text-sm text-slate-400">Who pays who, instantly</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="features" class="py-20 md:py-24 bg-white/[0.02] border-y border-white/8">
+      <div class="container">
+        <div class="max-w-3xl">
+          <p class="chip mb-4 w-fit">Features</p>
+          <h2 class="section-title text-3xl md:text-5xl font-black tracking-tight">Everything a travel group needs.</h2>
+          <p class="mt-4 text-slate-300 text-lg">Modern tools for planning, splitting, and staying synced before and during the trip.</p>
+        </div>
+
+        <div class="mt-10 grid md:grid-cols-2 xl:grid-cols-3 gap-5">
+          <div class="card p-6">
+            <i data-lucide="scales" class="w-6 h-6 text-violet-300 mb-4"></i>
+            <h3 class="text-xl font-bold mb-2">Smart Expense Splitting</h3>
+            <p class="text-slate-400">Split by person, percentage, custom amounts, or multi-day shared costs with automatic balance updates.</p>
+          </div>
+          <div class="card p-6">
+            <i data-lucide="wallet-cards" class="w-6 h-6 text-cyan-300 mb-4"></i>
+            <h3 class="text-xl font-bold mb-2">Budget Tracking</h3>
+            <p class="text-slate-400">See the trip budget at a glance with live spend, remaining headroom, and category breakdowns.</p>
+          </div>
+          <div class="card p-6">
+            <i data-lucide="message-square-more" class="w-6 h-6 text-emerald-300 mb-4"></i>
+            <h3 class="text-xl font-bold mb-2">Group Chat</h3>
+            <p class="text-slate-400">Keep decisions, expense notes, and trip updates in one place without switching apps.</p>
+          </div>
+          <div class="card p-6">
+            <i data-lucide="route" class="w-6 h-6 text-fuchsia-300 mb-4"></i>
+            <h3 class="text-xl font-bold mb-2">Trip Itinerary Planning</h3>
+            <p class="text-slate-400">Build a shared schedule with activities, reservations, time blocks, and live status updates.</p>
+          </div>
+          <div class="card p-6">
+            <i data-lucide="heart" class="w-6 h-6 text-pink-300 mb-4"></i>
+            <h3 class="text-xl font-bold mb-2">Places Wishlist</h3>
+            <p class="text-slate-400">Save restaurants, bars, viewpoints, and activities the group wants to try together.</p>
+          </div>
+          <div class="card p-6">
+            <i data-lucide="sparkles" class="w-6 h-6 text-amber-300 mb-4"></i>
+            <h3 class="text-xl font-bold mb-2">Settlement Optimization</h3>
+            <p class="text-slate-400">Reduce the number of transfers owed so the group can settle up with minimal friction.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="previews" class="py-20 md:py-24">
+      <div class="container">
+        <div class="grid lg:grid-cols-2 gap-6 items-start">
+          <div class="card p-6 md:p-8">
+            <div class="flex items-center justify-between mb-5">
+              <div>
+                <p class="text-sm text-slate-400">Application preview</p>
+                <h3 class="text-2xl font-bold">Trip dashboard</h3>
+              </div>
+              <div class="chip">4 travelers online</div>
+            </div>
+            <div class="grid sm:grid-cols-2 gap-4">
+              <div class="glass-soft rounded-2xl p-4">
+                <p class="text-sm text-slate-400">Budget left</p>
+                <p class="text-3xl font-black mt-1">$312</p>
+                <p class="text-xs text-emerald-300 mt-2">On track for the weekend</p>
+              </div>
+              <div class="glass-soft rounded-2xl p-4">
+                <p class="text-sm text-slate-400">Upcoming</p>
+                <p class="text-xl font-bold mt-1">Museum lunch</p>
+                <p class="text-xs text-slate-400 mt-2">Today • 1:00 PM</p>
+              </div>
+            </div>
+            <div class="mt-4 glass-soft rounded-2xl p-4">
+              <div class="flex items-center justify-between">
+                <p class="font-semibold">This week’s spend</p>
+                <p class="text-sm text-slate-400">$924 total</p>
+              </div>
+              <div class="mt-4 h-2 rounded-full bg-white/10 overflow-hidden">
+                <div class="h-full w-[68%] rounded-full bg-gradient-to-r from-violet-500 via-fuchsia-500 to-cyan-400"></div>
+              </div>
+              <div class="mt-3 flex justify-between text-xs text-slate-400">
+                <span>Food</span><span>Stay</span><span>Transit</span><span>Activities</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid gap-6">
+            <div class="card p-6">
+              <div class="flex items-center justify-between mb-4">
+                <h3 class="text-xl font-bold">Shared chat</h3>
+                <i data-lucide="wand-sparkles" class="w-5 h-5 text-cyan-300"></i>
+              </div>
+              <div class="space-y-3">
+                <div class="flex gap-3">
+                  <div class="h-9 w-9 rounded-full bg-violet-500/20 flex items-center justify-center text-xs font-bold">K</div>
+                  <div class="glass-soft rounded-2xl rounded-tl-md p-3 max-w-md">
+                    <p class="text-sm">Can we move the wine tasting to Friday?</p>
+                  </div>
+                </div>
+                <div class="flex gap-3 justify-end">
+                  <div class="glass-soft rounded-2xl rounded-tr-md p-3 max-w-md bg-cyan-500/10">
+                    <p class="text-sm">Yes — updated. I also split the cab from the airport.</p>
+                  </div>
+                  <div class="h-9 w-9 rounded-full bg-cyan-500/20 flex items-center justify-center text-xs font-bold">T</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="card p-6">
+              <div class="flex items-center justify-between mb-4">
+                <h3 class="text-xl font-bold">Settlement optimization</h3>
+                <span class="chip text-emerald-300 bg-emerald-400/10 border-emerald-400/15">2 transfers</span>
+              </div>
+              <div class="space-y-3">
+                <div class="flex items-center justify-between glass-soft rounded-2xl p-4">
+                  <span class="text-sm">Noah → Maya</span>
+                  <span class="font-semibold text-amber-300">$46.50</span>
+                </div>
+                <div class="flex items-center justify-between glass-soft rounded-2xl p-4">
+                  <span class="text-sm">Ava → Maya</span>
+                  <span class="font-semibold text-amber-300">$93.00</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-6 grid md:grid-cols-3 gap-5">
+          <div class="card p-6">
+            <p class="text-sm text-slate-400 mb-2">Preview</p>
+            <h4 class="font-bold text-lg">Expense feed</h4>
+            <p class="text-slate-400 mt-2">Every payment logged with payer, category, and exact split.</p>
+          </div>
+          <div class="card p-6">
+            <p class="text-sm text-slate-400 mb-2">Preview</p>
+            <h4 class="font-bold text-lg">Trip itinerary</h4>
+            <p class="text-slate-400 mt-2">Drag-and-drop day plans with maps, notes, and reservations.</p>
+          </div>
+          <div class="card p-6">
+            <p class="text-sm text-slate-400 mb-2">Preview</p>
+            <h4 class="font-bold text-lg">Wishlist board</h4>
+            <p class="text-slate-400 mt-2">Save spots the group can vote on before booking.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="py-20 md:py-24 bg-white/[0.02] border-y border-white/8">
+      <div class="container">
+        <div class="grid md:grid-cols-4 gap-5">
+          <div class="card p-6">
+            <p class="text-sm text-slate-400">Trips planned</p>
+            <p class="text-4xl font-black mt-2" data-count="2500">0</p>
+          </div>
+          <div class="card p-6">
+            <p class="text-sm text-slate-400">Shared expenses</p>
+            <p class="text-4xl font-black mt-2" data-count="180000">0</p>
+          </div>
+          <div class="card p-6">
+            <p class="text-sm text-slate-400">Minutes saved</p>
+            <p class="text-4xl font-black mt-2" data-count="9600">0</p>
+          </div>
+          <div class="card p-6">
+            <p class="text-sm text-slate-400">Traveler rating</p>
+            <p class="text-4xl font-black mt-2">4.9/5</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="testimonials" class="py-20 md:py-24">
+      <div class="container">
+        <div class="max-w-3xl">
+          <p class="chip mb-4 w-fit">Testimonials</p>
+          <h2 class="section-title text-3xl md:text-5xl font-black tracking-tight">Loved by travelers who like to keep things easy.</h2>
+        </div>
+
+        <div class="mt-10 grid lg:grid-cols-3 gap-5">
+          <div class="card p-6">
+            <div class="flex items-center gap-1 text-amber-300 mb-4">
+              <i data-lucide="star" class="fill-current w-4 h-4"></i><i data-lucide="star" class="fill-current w-4 h-4"></i><i data-lucide="star" class="fill-current w-4 h-4"></i><i data-lucide="star" class="fill-current w-4 h-4"></i><i data-lucide="star" class="fill-current w-4 h-4"></i>
+            </div>
+            <p class="text-slate-300 leading-relaxed">“TripSync saved our Iceland trip. Expenses were clean, the itinerary was shared, and nobody had to chase people for money.”</p>
+            <p class="mt-4 text-sm text-slate-400">— Gokul Mani Sujith, frequent group traveler</p>
+          </div>
+          <div class="card p-6">
+            <div class="flex items-center gap-1 text-amber-300 mb-4">
+              <i data-lucide="star" class="fill-current w-4 h-4"></i><i data-lucide="star" class="fill-current w-4 h-4"></i><i data-lucide="star" class="fill-current w-4 h-4"></i><i data-lucide="star" class="fill-current w-4 h-4"></i><i data-lucide="star" class="fill-current w-4 h-4"></i>
+            </div>
+            <p class="text-slate-300 leading-relaxed">“It feels like Notion for trips and Splitwise for money, but designed beautifully for real group travel.”</p>
+            <p class="mt-4 text-sm text-slate-400">— G Charan Reddy, product designer</p>
+          </div>
+          <div class="card p-6">
+            <div class="flex items-center gap-1 text-amber-300 mb-4">
+              <i data-lucide="star" class="fill-current w-4 h-4"></i><i data-lucide="star" class="fill-current w-4 h-4"></i><i data-lucide="star" class="fill-current w-4 h-4"></i><i data-lucide="star" class="fill-current w-4 h-4"></i><i data-lucide="star" class="fill-current w-4 h-4"></i>
+            </div>
+            <p class="text-slate-300 leading-relaxed">“We used it for a bachelor trip and settled everything before the flight home. Absolutely painless.”</p>
+            <p class="mt-4 text-sm text-slate-400">— Vandavasi Manikanta, weekend trip organizer</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="cta" class="py-20 md:py-24">
+      <div class="container">
+        <div class="card p-8 md:p-12 text-center relative overflow-hidden">
+          <div class="absolute inset-0 opacity-40">
+            <div class="absolute-top-20 left-1/2 h-64 w-64-translate-x-1/2 rounded-full bg-violet-500/25 blur-3xl"></div>
+            <div class="absolute bottom-0 right-0 h-52 w-52 rounded-full bg-cyan-400/20 blur-3xl"></div>
+          </div>
+          <div class="relative z-10 max-w-3xl mx-auto">
+            <h2 class="section-title text-3xl md:text-5xl font-black tracking-tight">Start planning stress-free trips today.</h2>
+            <p class="mt-4 text-lg text-slate-300 leading-relaxed">
+              Bring your group together in one place and let TripSync handle the math, the planning, and the follow-up.
+            </p>
+            <div class="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
+              <a href="#" class="btn btn-primary">Get Started Free</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="border-t border-white/8 py-10 text-center text-sm text-slate-300">
+    Made With Love By Parisa Karteek ❤️
+  </footer>
+
+  <script>
+    lucide.createIcons();
+
+    const counts = document.querySelectorAll('[data-count]');
+    const animateCount = (el) => {
+      const target = Number(el.getAttribute('data-count'));
+      const duration = 1400;
+      const start = performance.now();
+      const tick = (now) => {
+        const progress = Math.min((now - start) / duration, 1);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        el.textContent = Math.floor(target * eased).toLocaleString();
+        if (progress < 1) requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const countEl = entry.target.querySelector('[data-count]');
+          if (countEl && !countEl.dataset.animated) {
+            countEl.dataset.animated = 'true';
+            animateCount(countEl);
+          }
+        }
+      });
+    }, { threshold: 0.4 });
+
+    counts.forEach(el => observer.observe(el.parentElement));
+
+    const heroCounts = document.querySelectorAll('[data-count]');
+    heroCounts.forEach(el => {
+      if (el.closest('.stat')) {
+        el.dataset.animated = 'true';
+        animateCount(el);
+      }
+    });
+  </script>
+</body>
+</html>
