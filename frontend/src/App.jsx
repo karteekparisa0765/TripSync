@@ -16,7 +16,6 @@ import TripOverview from './pages/trips/TripOverview';
 import TripExpenses from './pages/trips/TripExpenses';
 import TripSettlements from './pages/trips/TripSettlements';
 import TripItinerary from './pages/trips/TripItinerary';
-import TripPlaces from './pages/trips/TripPlaces';
 import TripMembers from './pages/trips/TripMembers';
 import TripChat from './pages/trips/TripChat';
 import TripAnalytics from './pages/trips/TripAnalytics';
@@ -48,7 +47,6 @@ function App() {
               <Route path="expenses" element={<TripExpenses />} />
               <Route path="settlements" element={<TripSettlements />} />
               <Route path="itinerary" element={<TripItinerary />} />
-              <Route path="places" element={<TripPlaces />} />
               <Route path="members" element={<TripMembers />} />
               <Route path="chat" element={<TripChat />} />
               <Route path="analytics" element={<TripAnalytics />} />

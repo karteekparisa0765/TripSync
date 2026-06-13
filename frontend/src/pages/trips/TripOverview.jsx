@@ -71,8 +71,26 @@ const TripOverview = () => {
               <Link to="expenses"><PrimaryButton className="w-full"><Plus className="h-4 w-4" /> Add Expense</PrimaryButton></Link>
               <Link to="members"><SecondaryButton className="w-full"><Users className="h-4 w-4" /> Invite Member</SecondaryButton></Link>
               <Link to="settlements"><SecondaryButton className="w-full"><ReceiptText className="h-4 w-4" /> View Settlement</SecondaryButton></Link>
-              <Link to="places"><SecondaryButton className="w-full"><Route className="h-4 w-4" /> Add Place</SecondaryButton></Link>
+              <Link to="itinerary"><SecondaryButton className="w-full"><Route className="h-4 w-4" /> Add Place</SecondaryButton></Link>
             </div>
+          </Card>
+          <Card className="p-6">
+            <h2 className="text-lg font-semibold text-gray-950 dark:text-gray-50">Bucket list snapshot</h2>
+            {workspace.bucketList.length > 0 ? (
+              <div className="mt-4 space-y-3">
+                {workspace.bucketList.slice(0, 3).map((item) => (
+                  <div key={item.id} className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+                    <p className="font-semibold text-gray-900 dark:text-gray-100">{item.name}</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">{item.address || 'No address available'}</p>
+                  </div>
+                ))}
+                {workspace.bucketList.length > 3 && (
+                  <p className="text-sm text-gray-500 dark:text-gray-400">And {workspace.bucketList.length - 3} more saved place(s). Go to Bucket List to manage them.</p>
+                )}
+              </div>
+            ) : (
+              <p className="mt-3 text-sm text-gray-500 dark:text-gray-400">No bucket-list places yet. Use the Itinerary → Bucket List tab to add places and make your itinerary smarter.</p>
+            )}
           </Card>
         </div>
       </div>

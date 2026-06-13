@@ -85,6 +85,12 @@ const useTripWorkspace = () => {
     setStats(statsRes.data);
   }, [id]);
 
+  const refreshBucketList = useCallback(async () => {
+    const { data } = await axiosInstance.get(`/trips/${id}/bucket-list`);
+    setBucketList(data.items);
+    return data.items;
+  }, [id]);
+
   const saveTrip = async (payload = tripForm) => {
     if (!payload.name.trim()) throw new Error('Trip name is required');
     if (payload.startDate && payload.endDate && payload.startDate > payload.endDate) {
@@ -161,9 +167,15 @@ const useTripWorkspace = () => {
   };
 
   const generateItinerary = async (preferences) => {
+    await refreshBucketList();
     const { data } = await axiosInstance.post(`/trips/${id}/itinerary`, { preferences });
     setItinerary(data.itinerary);
     setNotice('Itinerary generated');
+  };
+
+  const askAssistant = async (question) => {
+    const { data } = await axiosInstance.post(`/trips/${id}/assistant`, { question });
+    return data.answer;
   };
 
   const activity = useMemo(() => {
@@ -229,6 +241,7 @@ const useTripWorkspace = () => {
       updateBucketItem,
       removeBucketItem,
       generateItinerary,
+      askAssistant,
     },
   };
 };

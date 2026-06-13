@@ -4,7 +4,7 @@ const User = require('../models/User');
 const BucketListItem = require('../models/BucketListItem');
 const ChatMessage = require('../models/ChatMessage');
 const { calculateBalances } = require('../utils/settlement');
-const { generateTripItinerary } = require('../services/geminiService');
+const { generateTripItinerary, generateTripAssistantResponse } = require('../services/geminiService');
 
 const formatTrip = (trip) => ({
   id: trip._id,
@@ -222,6 +222,55 @@ const createItinerary = async (req, res) => {
   }
 };
 
+// POST /api/trips/:id/assistant
+const createAssistantResponse = async (req, res) => {
+  try {
+    const question = (req.body?.question || '').trim();
+    if (!question) {
+      return res.status(400).json({ message: 'Question cannot be empty' });
+    }
+
+    if (question.length > 1000) {
+      return res.status(400).json({ message: 'Question must be 1000 characters or fewer' });
+    }
+
+    const trip = await Trip.findById(req.params.id).populate('members', 'name email');
+    if (!trip) return res.status(404).json({ message: 'Trip not found' });
+
+    const isMember = trip.members.some((m) => m._id.toString() === req.user._id.toString());
+    if (!isMember) {
+      return res.status(403).json({ message: 'You are not a member of this trip' });
+    }
+
+    const [bucketListItems, expenses] = await Promise.all([
+      BucketListItem.find({ tripId: trip._id }).sort({ createdAt: 1 }),
+      Expense.find({ tripId: trip._id }),
+    ]);
+
+    const totalSpent = expenses.reduce((sum, expense) => sum + expense.amount, 0);
+    const answer = await generateTripAssistantResponse({
+      trip,
+      bucketListItems,
+      itinerary: trip.itinerary || null,
+      question,
+    });
+
+    res.status(200).json({ answer });
+  } catch (err) {
+    console.error('Assistant response error:', err.message, err.stack);
+
+    if (err.message.includes('GEMINI_API_KEY')) {
+      return res.status(503).json({
+        message: 'AI assistant is not configured. Please set GEMINI_API_KEY.',
+      });
+    }
+
+    res.status(502).json({ 
+      message: err.message || 'Failed to get assistant response. Please try again later.'
+    });
+  }
+};
+
 // DELETE /api/trips/:id
 // Only the creator can delete a trip. Cascades to delete all related expenses.
 const deleteTrip = async (req, res) => {
@@ -395,4 +444,5 @@ module.exports = {
   leaveTrip,
   getItinerary,
   createItinerary,
+  createAssistantResponse,
 };

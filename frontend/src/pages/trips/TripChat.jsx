@@ -849,7 +849,7 @@ const TripChat = () => {
                       <WalletCards className="h-4 w-4" /> Add Expense
                     </PrimaryButton>
                   </Link>
-                  <Link to="../places" className="block">
+                  <Link to="../itinerary" className="block">
                     <SecondaryButton className="w-full gap-2">
                       <MapPin className="h-4 w-4" /> Add Place
                     </SecondaryButton>

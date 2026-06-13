@@ -10,6 +10,7 @@ const {
   leaveTrip,
   getItinerary,
   createItinerary,
+  createAssistantResponse,
 } = require('../controllers/tripController');
 const {
   addExpense,
@@ -36,6 +37,7 @@ router.delete('/:id/members/:userId', removeMember);
 router.post('/:id/leave', leaveTrip);
 router.get('/:id/itinerary', getItinerary);
 router.post('/:id/itinerary', createItinerary);
+router.post('/:id/assistant', createAssistantResponse);
 router.get('/:id/chat', getTripMessages);
 router.post('/:id/chat', sendTripMessage);
 

@@ -22,7 +22,6 @@ const tripNav = [
   { to: 'expenses', label: 'Expenses', icon: ReceiptText },
   { to: 'settlements', label: 'Settlements', icon: CreditCard },
   { to: 'itinerary', label: 'Itinerary', icon: Route },
-  { to: 'places', label: 'Places', icon: MapPinned },
   { to: 'members', label: 'Members', icon: Users },
   { to: 'chat', label: 'Chat', icon: MessageCircle },
   { to: 'analytics', label: 'Analytics', icon: BarChart3 },
