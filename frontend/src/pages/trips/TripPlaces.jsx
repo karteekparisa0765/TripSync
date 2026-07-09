@@ -8,6 +8,23 @@ import { Card, EmptyState, PageHeader, PrimaryButton, SecondaryButton } from '..
 const apiOrigin = axiosInstance.defaults.baseURL.replace(/\/api\/?$/, '');
 const photoSrc = (url) => (url?.startsWith('/api') ? `${apiOrigin}${url}` : url);
 
+// Renders a place photo via our backend proxy, falling back to a placeholder
+// block (instead of a broken-image icon) if the photo fails to load — e.g.
+// the place has no photo, or the Ola Maps photo request failed.
+const PlacePhoto = ({ src, alt, className }) => {
+  const [failed, setFailed] = useState(false);
+
+  if (!src || failed) {
+    return (
+      <div className={`flex items-center justify-center bg-gray-100 dark:bg-gray-800 ${className || ''}`}>
+        <MapPinned className="h-6 w-6 text-gray-400 dark:text-gray-600" />
+      </div>
+    );
+  }
+
+  return <img src={photoSrc(src)} alt={alt} className={className} onError={() => setFailed(true)} />;
+};
+
 const TripPlaces = () => {
   const workspace = useOutletContext();
   const { trip, bucketList, tripForm, actions } = workspace;
@@ -58,7 +75,7 @@ const TripPlaces = () => {
     <div className="space-y-8">
       <PageHeader
         title="Places"
-        description="Search Google Places and build a clean bucket list."
+        description="Search attractions and build a clean bucket list."
         actions={<PrimaryButton onClick={() => setModalOpen(true)}><Plus className="h-4 w-4" /> Add Place</PrimaryButton>}
       />
 
@@ -73,11 +90,7 @@ const TripPlaces = () => {
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
           {bucketList.map((item) => (
             <Card key={item.id} className="overflow-hidden">
-              {item.photoUrl ? (
-                <img src={photoSrc(item.photoUrl)} alt={item.name} className="h-44 w-full object-cover" />
-              ) : (
-                <div className="h-44 bg-gray-100 dark:bg-gray-800" />
-              )}
+              <PlacePhoto src={item.photoUrl} alt={item.name} className="h-44 w-full object-cover" />
               <div className="p-5">
                 <div className="flex items-start justify-between gap-4">
                   <div>
@@ -120,7 +133,7 @@ const TripPlaces = () => {
         <div className="mt-5 grid max-h-[55vh] grid-cols-1 gap-4 overflow-y-auto md:grid-cols-2">
           {places.map((place) => (
             <div key={place.placeId} className="overflow-hidden rounded-lg border border-gray-200 dark:border-gray-800">
-              {place.photoUrl ? <img src={photoSrc(place.photoUrl)} alt={place.name} className="h-32 w-full object-cover" /> : <div className="h-32 bg-gray-100 dark:bg-gray-800" />}
+              <PlacePhoto src={place.photoUrl} alt={place.name} className="h-32 w-full object-cover" />
               <div className="p-3">
                 <h3 className="font-medium text-gray-950 dark:text-gray-50">{place.name}</h3>
                 <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{place.address}</p>

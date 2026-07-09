@@ -1,138 +1,187 @@
-const PlaceSearchCache = require('../models/PlaceSearchCache');
+const PLACES_SEARCH_URL = "https://places.googleapis.com/v1/places:searchText";
+const PLACES_DETAILS_BASE = "https://places.googleapis.com/v1/places";
+const PHOTO_API_BASE = "https://places.googleapis.com/v1";
+const MAX_RESULTS = 8;
 
-const PLACES_API_BASE = 'https://places.googleapis.com/v1/places:searchText';
-const PHOTO_API_BASE = 'https://places.googleapis.com/v1';
-
-// Fields requested from the Places API (New) — keep this list minimal to control cost.
-// See: https://developers.google.com/maps/documentation/places/web-service/text-search
-const FIELD_MASK = [
-  'places.id',
-  'places.displayName',
-  'places.formattedAddress',
-  'places.rating',
-  'places.userRatingCount',
-  'places.types',
-  'places.location',
-  'places.photos',
-].join(',');
-
-/**
- * Build a photo URL for a place photo resource name returned by the Places API.
- * The actual binary is fetched by the client/browser using this URL + API key.
- */
 const buildPhotoUrl = (photoName) => {
   if (!photoName) return null;
-  // photoName looks like: "places/PLACE_ID/photos/PHOTO_RESOURCE".
-  // Route through our backend so the Google API key stays server-side.
   return `/api/places/photo?name=${encodeURIComponent(photoName)}`;
 };
 
 /**
- * Map a raw Places API (New) place object to our simplified shape.
+ * Fetch full place details (including photos) for a single place ID.
+ * Text Search doesn't reliably return photos — Place Details does.
  */
-const mapPlace = (place) => ({
-  placeId: place.id,
-  name: place.displayName?.text || 'Unnamed place',
-  address: place.formattedAddress || '',
-  rating: typeof place.rating === 'number' ? place.rating : null,
-  userRatingCount: typeof place.userRatingCount === 'number' ? place.userRatingCount : null,
-  types: Array.isArray(place.types) ? place.types : [],
-  location: {
-    lat: place.location?.latitude ?? null,
-    lng: place.location?.longitude ?? null,
-  },
-  photoUrl:
-    Array.isArray(place.photos) && place.photos.length > 0
-      ? buildPhotoUrl(place.photos[0].name)
-      : null,
-});
+const fetchPlaceDetails = async (placeId, apiKey) => {
+  try {
+    const url = `${PLACES_DETAILS_BASE}/${placeId}`;
+    const response = await fetch(url, {
+      headers: {
+        "X-Goog-Api-Key": apiKey,
+        "X-Goog-FieldMask": "id,photos.name,photos.widthPx,photos.heightPx",
+      },
+    });
+
+    if (!response.ok) {
+      console.warn(`[places-details] ${placeId} -> ${response.status}`);
+      return null;
+    }
+
+    const data = await response.json();
+    console.log(
+      `[places-details] ${placeId} -> photos: ${JSON.stringify(data.photos || []).slice(0, 200)}`,
+    );
+    return data;
+  } catch (err) {
+    console.warn(`[places-details] fetch failed for ${placeId}:`, err.message);
+    return null;
+  }
+};
+
+const mapPlace = (searchResult, details) => {
+  const photos = Array.isArray(details?.photos) ? details.photos : [];
+  const firstPhoto = photos[0];
+  const photoResourceName = firstPhoto?.name ?? null;
+
+  return {
+    placeId: searchResult.id,
+    name: searchResult.displayName?.text || "Unnamed place",
+    address: searchResult.formattedAddress || "",
+    rating:
+      typeof searchResult.rating === "number" ? searchResult.rating : null,
+    userRatingCount:
+      typeof searchResult.userRatingCount === "number"
+        ? searchResult.userRatingCount
+        : null,
+    types: Array.isArray(searchResult.types) ? searchResult.types : [],
+    location: {
+      lat: searchResult.location?.latitude ?? null,
+      lng: searchResult.location?.longitude ?? null,
+    },
+    photoUrl: photoResourceName ? buildPhotoUrl(photoResourceName) : null,
+  };
+};
 
 /**
- * Search for tourist attractions in a given destination using Google Places Text Search (New).
- * Results are cached in MongoDB for 30 days to reduce API usage.
- *
- * @param {string} destination - e.g. "Goa", "Manali", "Paris"
- * @returns {Promise<{ results: Array, fromCache: boolean }>}
+ * Search for tourist attractions using Google Places (New) Text Search API,
+ * then fetch photos for each result via Place Details.
+ * Caching disabled — every call hits the live API.
  */
 const searchAttractions = async (destination) => {
   const normalizedQuery = destination.trim().toLowerCase();
 
   if (!normalizedQuery) {
-    throw new Error('Destination is required for place search');
+    throw new Error("Destination is required for place search");
   }
 
-  // 1. Check cache first
-  const cached = await PlaceSearchCache.findOne({ query: normalizedQuery });
-  if (cached) {
-    return { results: cached.results, fromCache: true };
-  }
-
-  // 2. Call Google Places API (New) - Text Search
   const apiKey = process.env.GOOGLE_PLACES_API_KEY;
   if (!apiKey) {
-    throw new Error('GOOGLE_PLACES_API_KEY is not configured on the server');
+    throw new Error("GOOGLE_PLACES_API_KEY is not configured on the server");
   }
 
-  const response = await fetch(PLACES_API_BASE, {
-    method: 'POST',
+  console.log(`[places] Searching Google Places for: "${destination}"`);
+
+  // Step 1: Text search — get place IDs, names, addresses, ratings
+  const searchResponse = await fetch(PLACES_SEARCH_URL, {
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
-      'X-Goog-Api-Key': apiKey,
-      'X-Goog-FieldMask': FIELD_MASK,
+      "Content-Type": "application/json",
+      "X-Goog-Api-Key": apiKey,
+      "X-Goog-FieldMask": [
+        "places.id",
+        "places.displayName",
+        "places.formattedAddress",
+        "places.location",
+        "places.rating",
+        "places.userRatingCount",
+        "places.types",
+      ].join(","),
     },
     body: JSON.stringify({
       textQuery: `top tourist attractions in ${destination}`,
-      maxResultCount: 12,
+      maxResultCount: MAX_RESULTS,
+      languageCode: "en",
     }),
   });
 
-  if (!response.ok) {
-    const errorBody = await response.text();
-    console.error('Google Places API error:', response.status, errorBody);
-    throw new Error('Failed to fetch attractions from Google Places API');
+  if (!searchResponse.ok) {
+    const errorBody = await searchResponse.text();
+    console.error(
+      "[places] Text search error:",
+      searchResponse.status,
+      errorBody,
+    );
+    throw new Error("Failed to fetch attractions from Google Places API");
   }
 
-  const data = await response.json();
-  const places = Array.isArray(data.places) ? data.places : [];
-  const results = places.map((place) => mapPlace(place));
+  const searchData = await searchResponse.json();
+  const places = Array.isArray(searchData.places) ? searchData.places : [];
 
-  // 3. Store in cache (best-effort; don't fail the request if caching fails)
-  try {
-    await PlaceSearchCache.create({
-      query: normalizedQuery,
-      results,
-      fetchedAt: new Date(),
-    });
-  } catch (cacheErr) {
-    // Duplicate key races are possible under concurrent requests; ignore.
-    console.warn('Could not cache place search results:', cacheErr.message);
-  }
+  console.log(`[places] Text search returned ${places.length} places`);
+
+  // Step 2: Fetch photos for each place via Place Details (parallel)
+  const detailsResults = await Promise.all(
+    places.map((place) => fetchPlaceDetails(place.id, apiKey)),
+  );
+
+  // Step 3: Map to our shape
+  const results = places.map((place, i) => mapPlace(place, detailsResults[i]));
+
+  console.log(
+    `[places] Final: ${results.map((r) => `${r.name}=${r.photoUrl ? "HAS_PHOTO" : "null"}`).join(", ")}`,
+  );
 
   return { results, fromCache: false };
 };
 
-const getPhotoMediaUrl = async (photoName) => {
+/**
+ * Fetch photo bytes for a Google Places photo resource name.
+ */
+const getPhotoMedia = async (photoName) => {
   const apiKey = process.env.GOOGLE_PLACES_API_KEY;
   if (!apiKey) {
-    throw new Error('GOOGLE_PLACES_API_KEY is not configured on the server');
+    throw new Error("GOOGLE_PLACES_API_KEY is not configured on the server");
   }
 
-  if (!photoName || !photoName.startsWith('places/')) {
-    throw new Error('Invalid Google Places photo name');
+  if (!photoName || !photoName.startsWith("places/")) {
+    throw new Error("Invalid Google Places photo name: " + photoName);
   }
 
-  const response = await fetch(
-    `${PHOTO_API_BASE}/${photoName}/media?maxWidthPx=600&skipHttpRedirect=true&key=${apiKey}`
-  );
+  console.log("[places-photo] Fetching:", photoName);
 
-  if (!response.ok) {
-    const errorBody = await response.text();
-    console.error('Google Places photo error:', response.status, errorBody);
-    throw new Error('Failed to fetch photo from Google Places API');
+  const metaUrl = `${PHOTO_API_BASE}/${photoName}/media?maxWidthPx=800&skipHttpRedirect=true`;
+
+  const metaResponse = await fetch(metaUrl, {
+    headers: { "X-Goog-Api-Key": apiKey },
+  });
+
+  if (!metaResponse.ok) {
+    const errorBody = await metaResponse.text();
+    console.error("[places-photo] Error:", metaResponse.status, errorBody);
+    if (metaResponse.status === 403)
+      throw new Error("GOOGLE_PLACES_PHOTO_FORBIDDEN");
+    if (metaResponse.status === 404)
+      throw new Error("GOOGLE_PLACES_PHOTO_NOT_FOUND");
+    throw new Error(`Photo metadata fetch failed (${metaResponse.status})`);
   }
 
-  const data = await response.json();
-  return data.photoUri;
+  const metaData = await metaResponse.json();
+  console.log("[places-photo] Meta:", JSON.stringify(metaData).slice(0, 300));
+
+  const photoUri = metaData?.photoUri;
+  if (!photoUri) {
+    throw new Error("No photoUri in response: " + JSON.stringify(metaData));
+  }
+
+  const imageResponse = await fetch(photoUri);
+  if (!imageResponse.ok) {
+    throw new Error(`CDN fetch failed (${imageResponse.status})`);
+  }
+
+  const contentType = imageResponse.headers.get("content-type") || "image/jpeg";
+  const arrayBuffer = await imageResponse.arrayBuffer();
+
+  return { buffer: Buffer.from(arrayBuffer), contentType };
 };
 
-module.exports = { searchAttractions, getPhotoMediaUrl };
+module.exports = { searchAttractions, getPhotoMedia };

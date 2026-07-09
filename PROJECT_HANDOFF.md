@@ -43,10 +43,10 @@ This file is for whoever picks up this project next.
 - [x] `Trip.destination` field
 - [x] `BucketListItem` model
 - [x] `PlaceSearchCache` model with 30-day TTL
-- [x] Google Places Text Search wrapper
+- [x] Ola Maps Places Text Search + Advance Place Details wrapper
 - [x] Places search route: `GET /api/places/search?destination=Goa`
 - [x] Bucket-list routes under `/api/trips/:id/bucket-list` and `/api/bucket-list/:itemId`
-- [x] Server-side photo proxy route: `GET /api/places/photo?name=places/...`
+- [x] Server-side photo proxy route: `GET /api/places/photo?ref=<photo_reference>`
 
 ### Module 2 - Places + Bucket List Frontend
 - [x] Destination field on CreateTrip and trip Overview
@@ -85,7 +85,7 @@ Use `backend/.env.example` as the template. Never commit the real `backend/.env`
 | `JWT_SECRET` | Yes | Use a long random secret |
 | `JWT_EXPIRES_IN` | Yes | Defaults to `7d` |
 | `CLIENT_ORIGIN` | Yes | Frontend URL for CORS |
-| `GOOGLE_PLACES_API_KEY` | Yes for Places | Used server-side for Text Search and photo media |
+| `OLA_MAPS_API_KEY` | Yes for Places | Used server-side for Text Search, Advance Place Details, and photo media |
 | `GEMINI_API_KEY` | Yes for AI | Used server-side for itinerary generation |
 | `GEMINI_MODEL` | Optional | Defaults to `gemini-2.0-flash` |
 
@@ -96,9 +96,9 @@ Use `backend/.env.example` as the template. Never commit the real `backend/.env`
 - "Join Trip" is add-by-email only.
 - Settlement recalculates on every request.
 - Places search is cached by lowercase/trimmed destination string.
-- Google Places calls may cost money for uncached destination searches.
+- Ola Maps calls may cost money/quota for uncached destination searches (1 text search + up to 8 place-details calls per new destination).
 - Gemini calls may cost money; the app has a simple in-memory cooldown, not production-grade rate limiting.
-- Photo proxy is unauthenticated because browser image tags cannot attach the JWT header; it still keeps the Google API key server-side.
+- Photo proxy is unauthenticated because browser image tags cannot attach the JWT header; it still keeps the Ola Maps API key server-side.
 - No automated tests yet.
 
 ## 4. Suggested Next Work
